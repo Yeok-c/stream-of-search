@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run eval_neo.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/eval_neo.py",
+            "args": [
+                // "--ckpt", "${input:modelName}",
+                "--ckpt", "Qwen/Qwen2.5-0.5B-Instruct",
+                // "--ckpt", "unsloth/Qwen2.5-0.5B-Instruct-bnb-4bit",
+                "-n", "1000",
+                "-o", "0",
+                "-d", "${workspaceFolder}/data/val1_b4_t100_n500000_random.json",
+                "--temperature", "0.1",
+                "--batch_size", "64",
+                "--data_dir", "",
+                "--gens", "1"
+            ],        
+            "env": {
+            "CONDA_DEFAULT_ENV": "unsloth"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ],
+}

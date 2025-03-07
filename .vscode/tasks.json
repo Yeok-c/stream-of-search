@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "activate-unsloth",
+            "type": "process",
+            "command": "/bin/bash",
+            "args": [
+                "conda activate unsloth; echo 'Unsloth environment activated'"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
