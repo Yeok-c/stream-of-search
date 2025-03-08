@@ -14,6 +14,11 @@ from countdown_utils import *
 from countdown_bfs import bfs
 from countdown_dfs import dfs
 
+# import and setup logger
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=4)
 parser.add_argument("--ckpt", type=str, help="path to checkpoint")
@@ -25,7 +30,6 @@ parser.add_argument("--temperature", type=float, default=0.0)
 parser.add_argument("--batch_size", type=int, default=64)
 parser.add_argument("--ctx", type=int, default=4096)
 parser.add_argument("--gens", type=int, default=1)
-
 
 def eval_ll(model, tokenizer, data, batch_size=128, context_len=4096, temperature=0.0, n=1):
     """
@@ -81,25 +85,46 @@ def eval_ll(model, tokenizer, data, batch_size=128, context_len=4096, temperatur
     return output_texts_concat 
 
 args = parser.parse_args()
+logger.info(f"Arguments: {args}")
+
 torch.manual_seed(args.seed)
-model = GPTNeoForCausalLM.from_pretrained(args.ckpt, torch_dtype=torch.bfloat16, attn_implementation='flash_attention_2')
+# model = GPTNeoForCausalLM.from_pretrained(args.ckpt, torch_dtype=torch.bfloat16, attn_implementation='flash_attention_2')
+# not using flash attention though- is that important?
+model = AutoModelForCausalLM.from_pretrained(args.ckpt, torch_dtype=torch.bfloat16, device_map="auto", token=True)
+tokenizer = AutoTokenizer.from_pretrained(args.ckpt, use_fast=False, padding_side='left')
 
 model.eval()
 model.cuda()
 
-tokenizer = AutoTokenizer.from_pretrained(args.ckpt, padding_side='left')
+# tokenizer = AutoTokenizer.from_pretrained(args.ckpt, padding_side='left')
 tokenizer.pad_token = tokenizer.eos_token
 
-data_file = os.path.join(args.data_dir, args.data)
+logger.info(f"Model and tokenizer loaded from {args.ckpt}")
 
-with open(data_file, "r") as json_file:
-    data = json.load(json_file)
+data_file = os.path.join(args.data_dir, args.data)
+logger.info(f"Loading data from {data_file}")
+
+data = load_dataset("BrownianNotion/Stream-of-Search-Countdown", data_files="val1_b4_t100_n500000_random.json")
+# with open(data_file, "r") as json_file:
+#     data = json.load(json_file)
+
+# turn into list of dicts
+data = data['train']
+data = [d for d in data]
+
 
 predictions = []
 pred_ratings = []
 pred_reasons = []
 tokenizer.padding_side = "left"
-test_prompts = [tokenizer.bos_token + f"Current State: {sample['target']}:{sample['nums']}, Operations: []"  for sample in data[args.offset:args.num]]
+
+if not tokenizer.bos_token:
+    bos_token = "" 
+else: 
+    bos_token = tokenizer.bos_token
+
+
+test_prompts = [bos_token + f"Current State: {sample['target']}:{sample['nums']}, Operations: []"  for sample in data[args.offset:args.num]]
 len_nums = [len(sample['nums']) for sample in data[args.offset:args.num]]
 data_4 = [d for d, l in zip(test_prompts, len_nums) if l == 4]
 predictions = eval_ll(model, tokenizer, data_4, batch_size=args.batch_size, context_len=args.ctx, temperature=args.temperature, n=args.gens)
@@ -114,6 +139,7 @@ for i in range(len(predictions)):
     pred_ratings.append(rating)
     true_rating.append(tr)
     pred_reasons.append(reason)
+    
 
 # get max rating for each sample with its index
 pred_ratings = np.array(pred_ratings)
@@ -125,7 +151,10 @@ print(f"Average true rating: {np.mean(true_rating)}")
 print(f"Accuracy: {np.mean([r > 0 for r in pred_ratings])}")
 print(f"True Accuracy: {np.mean([r > 0 for r in true_rating])}")
 
-ckpt_dir = os.path.dirname(args.ckpt)
+ckpt_dir = "./logs/" + args.ckpt.replace("/", "--")
+if not os.path.exists(ckpt_dir):
+    os.makedirs(ckpt_dir)
+
 # save results
 results_file = os.path.join(ckpt_dir, f"results_{args.data.replace('/','_')}_{args.num}_{args.offset}")
 with open(results_file, "w") as f:
