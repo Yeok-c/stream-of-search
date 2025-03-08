@@ -1,0 +1,72 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "stream-of-search-countdown",
+  "dataset_size": 8303097,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/BrownianNotion/Stream-of-Search-Countdown@f0a8ee6f73b2f457b73e23f98f99512b1a55997d/val1_b4_t100_n500000_random.json": {
+      "num_bytes": 8741852,
+      "checksum": null
+    }
+  },
+  "download_size": 8741852,
+  "features": {
+    "nums": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    },
+    "target": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "solution": {
+      "feature": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    },
+    "search_path": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "rating": {
+      "dtype": "float64",
+      "_type": "Value"
+    },
+    "search_type": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "optimal_path": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "heuristic": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 17044949,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 8303097,
+      "num_examples": 1000,
+      "dataset_name": "stream-of-search-countdown"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
